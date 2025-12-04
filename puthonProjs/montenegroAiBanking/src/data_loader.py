@@ -35,24 +35,28 @@ def load_and_clean_data(data_folder: str = "data", quarter_pattern: str = "0925"
     st.write(f"🔍 Debug: Data folder postoji: {data_folder_path.exists()}")
     
     # Traži CSV fajlove bilo gde u repozitorijumu
-    st.write(f"🔍 Tražim CSV fajlove sa pattern '{quarter_pattern}*' bilo gde u repozitorijumu...")
-    csv_files = list(Path('.').rglob(f"{quarter_pattern}*.csv"))
+    # Filtriraj samo *_bu.csv fajlove (bilans uspjeha), ne *_bs.csv (bilans stanja)
+    st.write(f"🔍 Tražim CSV fajlove sa pattern '{quarter_pattern}*_bu.csv' bilo gde u repozitorijumu...")
+    all_csv = list(Path('.').rglob(f"{quarter_pattern}*.csv"))
+    
+    # Filtriraj samo _bu.csv fajlove
+    csv_files = [f for f in all_csv if f.name.endswith('_bu.csv')]
     
     if csv_files:
-        st.success(f"✅ Pronađeno {len(csv_files)} CSV fajlova!")
+        st.success(f"✅ Pronađeno {len(csv_files)} CSV fajlova za bilans uspjeha!")
         st.write(f"📄 Prvih 10 fajlova:")
         for f in csv_files[:10]:
             st.write(f"  - {f}")
     else:
-        st.warning(f"⚠️ Nema CSV fajlova za pattern '{quarter_pattern}*'")
-        # Pokušaj da nađeš bilo koje CSV fajlove
-        any_csv = list(Path('.').rglob("*.csv"))
-        if any_csv:
-            st.write(f"📊 Pronađeno {len(any_csv)} CSV fajlova ukupno (bez pattern filtera). Primeri:")
-            for f in any_csv[:10]:
+        st.warning(f"⚠️ Nema CSV fajlova za pattern '{quarter_pattern}*_bu.csv'")
+        # Pokušaj da nađeš bilo koje _bu.csv fajlove
+        any_bu_csv = [f for f in list(Path('.').rglob("*.csv")) if f.name.endswith('_bu.csv')]
+        if any_bu_csv:
+            st.write(f"📊 Pronađeno {len(any_bu_csv)} _bu.csv fajlova ukupno. Primeri:")
+            for f in any_bu_csv[:10]:
                 st.write(f"  - {f}")
         else:
-            st.error("❌ Nema CSV fajlova uopšte u repozitorijumu!")
+            st.error("❌ Nema _bu.csv fajlova uopšte u repozitorijumu!")
             return pd.DataFrame(columns=['POZICIJA', 'IZNOS', 'BANKA'])
     
         st.write(f"🔍 Debug: Pronađeno {len(csv_files)} CSV fajlova za pattern '{quarter_pattern}*'")
