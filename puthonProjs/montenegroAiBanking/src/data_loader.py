@@ -18,16 +18,38 @@ def load_and_clean_data(data_folder: str = "data", quarter_pattern: str = "0925"
     """
     data_path = Path(data_folder)
     
+    # Debug informacije za Streamlit Cloud
+    current_dir = Path.cwd()
+    st.write(f"🔍 Debug: Trenutni direktorij: {current_dir}")
+    st.write(f"🔍 Debug: Tražim podatke u: {data_path.absolute()}")
+    st.write(f"🔍 Debug: Folder postoji: {data_path.exists()}")
     
     if not data_path.exists():
-        print(f"Folder {data_folder} ne postoji!")
+        st.error(f"❌ Folder {data_folder} ne postoji!")
+        st.write(f"📁 Dostupni fajlovi u root direktorijumu:")
+        try:
+            root_files = list(Path('.').iterdir())
+            for f in root_files[:10]:  # Prikaži prvih 10
+                st.write(f"  - {f}")
+        except Exception as e:
+            st.write(f"Greška pri listanju: {e}")
         return pd.DataFrame(columns=['POZICIJA', 'IZNOS', 'BANKA'])
     
     # Pronađi sve CSV fajlove koji počinju sa quarter_pattern
-    csv_files = list[Path](data_path.rglob(f"{quarter_pattern}*.csv"))
+    csv_files = list(data_path.rglob(f"{quarter_pattern}*.csv"))
+    
+    st.write(f"🔍 Debug: Pronađeno {len(csv_files)} CSV fajlova za pattern '{quarter_pattern}*'")
+    if len(csv_files) > 0:
+        st.write(f"📄 Prvih 5 fajlova: {[str(f) for f in csv_files[:5]]}")
     
     if not csv_files:
-        print(f"Nema CSV fajlova za izabrani kvartal u folderu {data_folder}")
+        st.warning(f"⚠️ Nema CSV fajlova za izabrani kvartal '{quarter_pattern}' u folderu {data_folder}")
+        # Pokušaj da nađeš bilo koje CSV fajlove za debug
+        all_csv = list(data_path.rglob("*.csv"))
+        if all_csv:
+            st.write(f"📊 Pronađeno {len(all_csv)} CSV fajlova ukupno. Primeri:")
+            for f in all_csv[:5]:
+                st.write(f"  - {f.name}")
         return pd.DataFrame(columns=['POZICIJA', 'IZNOS', 'BANKA'])
     
     all_dataframes = []
