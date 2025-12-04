@@ -16,47 +16,57 @@ def load_and_clean_data(data_folder: str = "data", quarter_pattern: str = "0925"
     Returns:
         DataFrame sa kolonama 'POZICIJA', 'IZNOS', 'BANKA'
     """
-    # Traži u data/bu folderu (unutar data foldera)
-    data_path = Path(data_folder) / "bu"
-    
     # Debug informacije za Streamlit Cloud
     current_dir = Path.cwd()
     st.write(f"🔍 Debug: Trenutni direktorij: {current_dir}")
-    st.write(f"🔍 Debug: Tražim podatke u: {data_path.absolute()}")
-    st.write(f"🔍 Debug: Folder postoji: {data_path.exists()}")
     
-    if not data_path.exists():
-        st.error(f"❌ Folder {data_path} ne postoji!")
-        st.write(f"📁 Dostupni fajlovi u root direktorijumu:")
+    # Prvo proveri da li postoji data folder
+    data_folder_path = Path(data_folder)
+    st.write(f"🔍 Debug: Proveravam folder: {data_folder_path.absolute()}")
+    st.write(f"🔍 Debug: Data folder postoji: {data_folder_path.exists()}")
+    
+    if data_folder_path.exists():
+        st.write(f"📁 Sadržaj '{data_folder}' foldera:")
         try:
-            root_files = list(Path('.').iterdir())
-            for f in root_files[:10]:  # Prikaži prvih 10
-                st.write(f"  - {f}")
-            # Proveri da li postoji data folder
-            data_folder_path = Path(data_folder)
-            if data_folder_path.exists():
-                st.write(f"📁 Folder '{data_folder}' postoji. Sadržaj:")
-                for item in list(data_folder_path.iterdir())[:10]:
-                    st.write(f"  - {item}")
+            for item in list(data_folder_path.iterdir())[:20]:
+                st.write(f"  - {item.name} ({'folder' if item.is_dir() else 'fajl'})")
         except Exception as e:
             st.write(f"Greška pri listanju: {e}")
-        return pd.DataFrame(columns=['POZICIJA', 'IZNOS', 'BANKA'])
     
-    # Pronađi sve CSV fajlove koji počinju sa quarter_pattern
-    csv_files = list(data_path.rglob(f"{quarter_pattern}*.csv"))
+    # Traži u data/bu folderu (unutar data foldera)
+    data_path = data_folder_path / "bu"
+    st.write(f"🔍 Debug: Tražim podatke u: {data_path.absolute()}")
+    st.write(f"🔍 Debug: data/bu folder postoji: {data_path.exists()}")
     
-    st.write(f"🔍 Debug: Pronađeno {len(csv_files)} CSV fajlova za pattern '{quarter_pattern}*'")
-    if len(csv_files) > 0:
-        st.write(f"📄 Prvih 5 fajlova: {[str(f) for f in csv_files[:5]]}")
+    # Ako data/bu ne postoji, pokušaj da nađeš CSV fajlove direktno u data folderu
+    if not data_path.exists():
+        st.warning(f"⚠️ Folder {data_path} ne postoji!")
+        st.write(f"📁 Pokušavam da nađem CSV fajlove u '{data_folder}' folderu...")
+        
+        # Pokušaj da nađeš CSV fajlove bilo gde u data folderu
+        all_csv = list(data_folder_path.rglob(f"{quarter_pattern}*.csv"))
+        if all_csv:
+            st.success(f"✅ Pronađeno {len(all_csv)} CSV fajlova u '{data_folder}' folderu!")
+            csv_files = all_csv
+        else:
+            st.error(f"❌ Nema CSV fajlova za pattern '{quarter_pattern}*' u '{data_folder}' folderu")
+            # Pokušaj da nađeš bilo koje CSV fajlove
+            any_csv = list(data_folder_path.rglob("*.csv"))
+            if any_csv:
+                st.write(f"📊 Pronađeno {len(any_csv)} CSV fajlova ukupno. Primeri:")
+                for f in any_csv[:10]:
+                    st.write(f"  - {f}")
+            return pd.DataFrame(columns=['POZICIJA', 'IZNOS', 'BANKA'])
+    else:
+        # Pronađi sve CSV fajlove koji počinju sa quarter_pattern
+        csv_files = list(data_path.rglob(f"{quarter_pattern}*.csv"))
+    
+        st.write(f"🔍 Debug: Pronađeno {len(csv_files)} CSV fajlova za pattern '{quarter_pattern}*'")
+        if len(csv_files) > 0:
+            st.write(f"📄 Prvih 5 fajlova: {[str(f) for f in csv_files[:5]]}")
     
     if not csv_files:
         st.warning(f"⚠️ Nema CSV fajlova za izabrani kvartal '{quarter_pattern}' u folderu {data_folder}")
-        # Pokušaj da nađeš bilo koje CSV fajlove za debug
-        all_csv = list(data_path.rglob("*.csv"))
-        if all_csv:
-            st.write(f"📊 Pronađeno {len(all_csv)} CSV fajlova ukupno. Primeri:")
-            for f in all_csv[:5]:
-                st.write(f"  - {f.name}")
         return pd.DataFrame(columns=['POZICIJA', 'IZNOS', 'BANKA'])
     
     all_dataframes = []
