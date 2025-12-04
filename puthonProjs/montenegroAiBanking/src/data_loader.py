@@ -16,7 +16,8 @@ def load_and_clean_data(data_folder: str = "data", quarter_pattern: str = "0925"
     Returns:
         DataFrame sa kolonama 'POZICIJA', 'IZNOS', 'BANKA'
     """
-    data_path = Path(data_folder)
+    # Traži u data/bu folderu (unutar data foldera)
+    data_path = Path(data_folder) / "bu"
     
     # Debug informacije za Streamlit Cloud
     current_dir = Path.cwd()
@@ -25,12 +26,18 @@ def load_and_clean_data(data_folder: str = "data", quarter_pattern: str = "0925"
     st.write(f"🔍 Debug: Folder postoji: {data_path.exists()}")
     
     if not data_path.exists():
-        st.error(f"❌ Folder {data_folder} ne postoji!")
+        st.error(f"❌ Folder {data_path} ne postoji!")
         st.write(f"📁 Dostupni fajlovi u root direktorijumu:")
         try:
             root_files = list(Path('.').iterdir())
             for f in root_files[:10]:  # Prikaži prvih 10
                 st.write(f"  - {f}")
+            # Proveri da li postoji data folder
+            data_folder_path = Path(data_folder)
+            if data_folder_path.exists():
+                st.write(f"📁 Folder '{data_folder}' postoji. Sadržaj:")
+                for item in list(data_folder_path.iterdir())[:10]:
+                    st.write(f"  - {item}")
         except Exception as e:
             st.write(f"Greška pri listanju: {e}")
         return pd.DataFrame(columns=['POZICIJA', 'IZNOS', 'BANKA'])
