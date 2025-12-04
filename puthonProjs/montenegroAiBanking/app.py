@@ -67,7 +67,7 @@ with st.sidebar:
 # 1. UČITAVANJE I OBRADA
 # Automatsko učitavanje podataka iz data/bu foldera za izabrani kvartal
 with st.spinner(f"Učitavam podatke za {selected_quarter_label}..."):
-    raw_df = load_and_clean_data(data_folder="data/bu", quarter_pattern=quarter_pattern)
+    raw_df = load_and_clean_data(data_folder="data", quarter_pattern=quarter_pattern)
 
 # Inicijalizacija varijabli
 df_kpi = None
